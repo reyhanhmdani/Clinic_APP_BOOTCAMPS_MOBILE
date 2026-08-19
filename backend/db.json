@@ -1,0 +1,386 @@
+{
+  "patients": [
+    {
+      "id": "1",
+      "no_rm": "RM-2025-001",
+      "name": "Budi Santoso",
+      "gender": "Male",
+      "age": 28,
+      "phone": "0812-1111-2222",
+      "address": "Jl. Merdeka No. 123, Jakarta Selatan"
+    },
+    {
+      "id": "2",
+      "no_rm": "RM-2025-002",
+      "name": "Siti Aisyah",
+      "gender": "Female",
+      "age": 25,
+      "phone": "0813-2222-3333",
+      "address": "Jl. Mawar No. 45, Bandung"
+    },
+    {
+      "id": "3",
+      "no_rm": "RM-2025-003",
+      "name": "Joko Widodo",
+      "gender": "Male",
+      "age": 35,
+      "phone": "0814-3333-4444",
+      "address": "Jl. Sudirman No. 88, Jakarta Pusat"
+    },
+    {
+      "id": "4",
+      "no_rm": "RM-2025-004",
+      "name": "Ahmad Rizky",
+      "gender": "Male",
+      "age": 30,
+      "phone": "0815-4444-5555",
+      "address": "Jl. Pemuda No. 12, Surabaya"
+    },
+    {
+      "id": "5",
+      "no_rm": "RM-2025-005",
+      "name": "Marina Putri",
+      "gender": "Female",
+      "age": 22,
+      "phone": "0816-5555-6666",
+      "address": "Jl. Pandanaran No. 9, Semarang"
+    },
+    {
+      "id": "6",
+      "no_rm": "RM-2025-006",
+      "name": "Eko Prasetyo",
+      "gender": "Male",
+      "age": 42,
+      "phone": "0817-6666-7777",
+      "address": "Jl. Malioboro No. 50, Yogyakarta"
+    },
+    {
+      "id": "7",
+      "no_rm": "RM-2025-007",
+      "name": "Dewi Lestari",
+      "gender": "Female",
+      "age": 31,
+      "phone": "0818-7777-8888",
+      "address": "Jl. Diponegoro No. 17, Malang"
+    },
+    {
+      "id": "8",
+      "no_rm": "RM-2025-008",
+      "name": "Agus Setiawan",
+      "gender": "Male",
+      "age": 29,
+      "phone": "0819-8888-9999",
+      "address": "Jl. Asia Afrika No. 34, Bandung"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "1",
+      "name": "Dr. Andri Wijaya",
+      "spesialis": "Spesialis Penyakit Dalam",
+      "phone": "0811-0001-0001"
+    },
+    {
+      "id": "2",
+      "name": "Dr. Budi Santoso",
+      "spesialis": "Dokter Umum",
+      "phone": "0811-0002-0002"
+    },
+    {
+      "id": "3",
+      "name": "Dr. Sarah Lestari",
+      "spesialis": "Spesialis Gigi & Mulut",
+      "phone": "0811-0003-0003"
+    },
+    {
+      "id": "4",
+      "name": "Dr. Hendra Gunawan",
+      "spesialis": "Spesialis Tulang & Orthopedi",
+      "phone": "0811-0004-0004"
+    },
+    {
+      "id": "5",
+      "name": "Dr. Maya Indah",
+      "spesialis": "Spesialis Kulit & Kelamin",
+      "phone": "0811-0005-0005"
+    },
+    {
+      "id": "6",
+      "name": "Dr. Rizky Alamsyah",
+      "spesialis": "Spesialis Anak",
+      "phone": "0811-0006-0006"
+    },
+    {
+      "id": "7",
+      "name": "Dr. Dewi Sartika",
+      "spesialis": "Spesialis Mata",
+      "phone": "0811-0007-0007"
+    }
+  ],
+  "visits": [
+    {
+      "id": "VIS-2025-000123",
+      "patient_id": "1",
+      "doctor_id": "1",
+      "patient_name": "Budi Santoso",
+      "doctor_name": "Dr. Andri Wijaya",
+      "queue_number": 1,
+      "time": "08:30 AM",
+      "visit_date": "2025-05-21",
+      "status": "waiting"
+    },
+    {
+      "id": "VIS-2025-000124",
+      "patient_id": "2",
+      "doctor_id": "3",
+      "patient_name": "Siti Aisyah",
+      "doctor_name": "Dr. Sarah Lestari",
+      "queue_number": 2,
+      "time": "08:45 AM",
+      "visit_date": "2025-05-21",
+      "status": "waiting"
+    },
+    {
+      "id": "VIS-2025-000125",
+      "patient_id": "3",
+      "doctor_id": "2",
+      "patient_name": "Joko Widodo",
+      "doctor_name": "Dr. Budi Santoso",
+      "queue_number": 3,
+      "time": "09:00 AM",
+      "visit_date": "2025-05-21",
+      "status": "in_consultation"
+    },
+    {
+      "id": "VIS-2025-000126",
+      "patient_id": "4",
+      "doctor_id": "4",
+      "patient_name": "Ahmad Rizky",
+      "doctor_name": "Dr. Hendra Gunawan",
+      "queue_number": 4,
+      "time": "09:15 AM",
+      "visit_date": "2025-05-21",
+      "status": "waiting"
+    },
+    {
+      "id": "VIS-2025-000127",
+      "patient_id": "5",
+      "doctor_id": "5",
+      "patient_name": "Marina Putri",
+      "doctor_name": "Dr. Maya Indah",
+      "queue_number": 5,
+      "time": "09:30 AM",
+      "visit_date": "2025-05-21",
+      "status": "waiting"
+    },
+    {
+      "id": "VIS-2025-000128",
+      "patient_id": "6",
+      "doctor_id": "6",
+      "patient_name": "Eko Prasetyo",
+      "doctor_name": "Dr. Rizky Alamsyah",
+      "queue_number": 6,
+      "time": "10:00 AM",
+      "visit_date": "2025-05-21",
+      "status": "completed"
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "1",
+      "code": "J00",
+      "name": "Flu & Batuk Pilek (Common Cold)"
+    },
+    {
+      "id": "2",
+      "code": "K21.9",
+      "name": "Asam Lambung / Maag (GERD)"
+    },
+    {
+      "id": "3",
+      "code": "K02.9",
+      "name": "Karies / Gigi Berlubang"
+    },
+    {
+      "id": "4",
+      "code": "M54.5",
+      "name": "Nyeri Punggung & Tulang Belakang"
+    },
+    {
+      "id": "5",
+      "code": "L20.9",
+      "name": "Alergi Kulit & Dermatitis"
+    },
+    {
+      "id": "6",
+      "code": "G44.2",
+      "name": "Sakit Kepala / Migrain"
+    }
+  ],
+  "treatments": [
+    {
+      "id": "1",
+      "name": "Konsultasi & Pemeriksaan Dokter Umum",
+      "price": 35000
+    },
+    {
+      "id": "2",
+      "name": "Konsultasi Dokter Spesialis",
+      "price": 75000
+    },
+    {
+      "id": "3",
+      "name": "Pembersihan Karang Gigi (Scaling)",
+      "price": 150000
+    },
+    {
+      "id": "4",
+      "name": "Penambalan Gigi Berlubang",
+      "price": 120000
+    },
+    {
+      "id": "5",
+      "name": "Pemeriksaan & Penanganan Tulang Sendi",
+      "price": 90000
+    },
+    {
+      "id": "6",
+      "name": "Perawatan & Pengobatan Alergi Kulit",
+      "price": 85000
+    }
+  ],
+  "medicines": [
+    {
+      "id": "1",
+      "name": "Paracetamol 500mg",
+      "price": 5000,
+      "stock": 100,
+      "unit": "Strip"
+    },
+    {
+      "id": "2",
+      "name": "Vitamin C 500mg",
+      "price": 3000,
+      "stock": 150,
+      "unit": "Strip"
+    },
+    {
+      "id": "3",
+      "name": "Amoxicillin 500mg (Antibiotik)",
+      "price": 8000,
+      "stock": 80,
+      "unit": "Strip"
+    },
+    {
+      "id": "4",
+      "name": "Antasida Doen (Obat Maag)",
+      "price": 4000,
+      "stock": 60,
+      "unit": "Strip"
+    },
+    {
+      "id": "5",
+      "name": "Ibuprofen 400mg (Anti Nyeri)",
+      "price": 6000,
+      "stock": 90,
+      "unit": "Strip"
+    },
+    {
+      "id": "6",
+      "name": "CTM 4mg (Obat Alergi)",
+      "price": 2500,
+      "stock": 120,
+      "unit": "Strip"
+    },
+    {
+      "id": "7",
+      "name": "OBH Sirup Batuk 100ml",
+      "price": 18000,
+      "stock": 45,
+      "unit": "Botol"
+    },
+    {
+      "id": "8",
+      "name": "Degirol Tablet Hisap Tenggorokan",
+      "price": 12000,
+      "stock": 70,
+      "unit": "Strip"
+    },
+    {
+      "id": "9",
+      "name": "Neurobion Forte (Vitamin Saraf)",
+      "price": 10000,
+      "stock": 85,
+      "unit": "Strip"
+    },
+    {
+      "id": "10",
+      "name": "Salep Acyclovir / Alergi Kulit 5g",
+      "price": 15000,
+      "stock": 35,
+      "unit": "Tube"
+    }
+  ],
+  "consultations": [
+    {
+      "id": "1",
+      "visit_id": "VIS-2025-000123",
+      "patient_id": "1",
+      "doctor_id": "1",
+      "complaint": "Demam, badan pegal, dan sakit kepala sejak 2 hari yang lalu.",
+      "diagnosis": "Flu & Batuk Pilek (Common Cold - J00)",
+      "treatment": "Konsultasi Dokter Spesialis",
+      "consultation_fee": 75000,
+      "notes": "Istirahat cukup minimal 8 jam, perbanyak minum air hangat.",
+      "prescribed_medicines": [
+        {
+          "medicine_id": "1",
+          "name": "Paracetamol 500mg",
+          "qty": 1,
+          "price": 5000,
+          "amount": 5000
+        },
+        {
+          "medicine_id": "2",
+          "name": "Vitamin C 500mg",
+          "qty": 1,
+          "price": 3000,
+          "amount": 3000
+        }
+      ]
+    }
+  ],
+  "invoices": [
+    {
+      "id": "1",
+      "invoice_no": "INV-2025-000123",
+      "visit_id": "VIS-2025-000123",
+      "patient_name": "Budi Santoso",
+      "doctor_name": "Dr. Andri Wijaya",
+      "date": "May 21, 2025 - 09:15 AM",
+      "status": "unpaid",
+      "subtotal": 83000,
+      "total": 83000,
+      "items": [
+        {
+          "name": "Konsultasi Dokter Spesialis",
+          "qty": 1,
+          "price": 75000,
+          "amount": 75000
+        },
+        {
+          "name": "Paracetamol 500mg",
+          "qty": 1,
+          "price": 5000,
+          "amount": 5000
+        },
+        {
+          "name": "Vitamin C 500mg",
+          "qty": 1,
+          "price": 3000,
+          "amount": 3000
+        }
+      ]
+    }
+  ]
+}

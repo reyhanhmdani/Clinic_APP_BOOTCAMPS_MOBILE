@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: clinic-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rahasia
+      POSTGRES_DB: clinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # backend:
+  #   build: ./clinic_backend
+  #   container_name: clinic-backend
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     DATABASE_URL: 'postgresql://postgres:rahasia@postgres:5432/clinic'
+  #     JWT_SECRET: 'rahasia_super_aman'
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres_data:
