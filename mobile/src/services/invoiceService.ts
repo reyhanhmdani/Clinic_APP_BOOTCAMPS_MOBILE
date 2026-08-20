@@ -21,6 +21,6 @@ export const getInvoiceByIdService = async (invoiceId: number): Promise<Invoice>
 };
 
 export const payInvoiceService = async (invoiceId: number, input?: PayInvoiceInput): Promise<Invoice> => {
-  const response = await api.patch<{ data: Invoice }>(`/invoices/${invoiceId}`, input);
+  const response = await api.patch<{ data: Invoice }>(`/invoices/${invoiceId}/pay`, input);
   return response.data.data;
 };
