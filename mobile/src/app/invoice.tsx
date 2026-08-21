@@ -1,5 +1,14 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Platform, Alert, Modal, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Alert,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -9,6 +18,7 @@ import { payInvoiceService } from "../services/invoiceService";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
+import { formatRupiah } from "../utils/formatRupiah";
 
 export default function InvoiceScreen() {
   // cari kunjungan id tertentu
@@ -20,7 +30,16 @@ export default function InvoiceScreen() {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState<boolean>(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "QRIS" | "TRANSFER" | "CARD">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "QRIS" | "TRANSFER" | "CARD">(
+    (selectedVisit?.invoice?.paymentMethod as any) || "CASH"
+  );
+
+  // otomatis update metode bayar sesuai data asli di database
+  useEffect(() => {
+    if (selectedVisit?.invoice?.paymentMethod) {
+      setPaymentMethod(selectedVisit.invoice.paymentMethod as any);
+    }
+  }, [selectedVisit?.invoice?.status, selectedVisit?.invoice?.paymentMethod]);
 
   const isAlreadyPaid = selectedVisit?.invoice?.status === "PAID";
   const invoiceNo = selectedVisit?.invoice?.invoiceNo || "-";
@@ -33,12 +52,6 @@ export default function InvoiceScreen() {
   const totalAmount = selectedVisit?.invoice?.totalAmount
     ? Number(selectedVisit?.invoice?.totalAmount)
     : 0;
-
-  const formattedTotal = new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(totalAmount);
 
   const paymentMethods = [
     { id: "CASH", label: "Tunai (Cash)", icon: "cash-outline", bg: "bg-[#fde047]" },
@@ -121,17 +134,17 @@ export default function InvoiceScreen() {
         </tr>
         <tr>
           <td>Jasa Konsultasi & Tindakan Dokter</td>
-          <td style="text-align: right;">Rp ${totalConsultationFee.toLocaleString("id-ID")}</td>
+          <td style="text-align: right;">${formatRupiah(totalConsultationFee)}</td>
         </tr>
         <tr>
           <td>Total Resep Farmasi Apotek</td>
-          <td style="text-align: right;">Rp ${totalMedicineFee.toLocaleString("id-ID")}</td>
+          <td style="text-align: right;">${formatRupiah(totalMedicineFee)}</td>
         </tr>
       </table>
 
       <div class="total-section">
         <span>TOTAL DIBAYAR</span>
-        <span>Rp ${totalAmount.toLocaleString("id-ID")}</span>
+        <span>${formatRupiah(totalAmount)}</span>
       </div>
 
       <div class="footer">
@@ -152,7 +165,8 @@ export default function InvoiceScreen() {
       const fileName = `Struk_${cleanInvoiceNo}.pdf`;
 
       if (Platform.OS === "android") {
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        const permissions =
+          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
         if (permissions.granted) {
           const uri = await FileSystem.StorageAccessFramework.createFileAsync(
             permissions.directoryUri,
@@ -308,7 +322,7 @@ export default function InvoiceScreen() {
                   </Text>
                 </View>
                 <Text className="text-xs font-black text-[#18181b]">
-                  Rp {totalConsultationFee.toLocaleString("id-ID")}
+                  {formatRupiah(totalConsultationFee)}
                 </Text>
               </View>
 
@@ -321,7 +335,7 @@ export default function InvoiceScreen() {
                   </Text>
                 </View>
                 <Text className="text-xs font-black text-[#18181b]">
-                  Rp {totalMedicineFee.toLocaleString("id-ID")}
+                  {formatRupiah(totalMedicineFee)}
                 </Text>
               </View>
             </View>
@@ -329,9 +343,7 @@ export default function InvoiceScreen() {
             {/* Banner Total Tagihan Akhir */}
             <View className="bg-[#a3e635] border-2 border-[#18181b] rounded-xl p-3.5 flex-row justify-between items-center">
               <Text className="text-xs font-black text-[#18181b] uppercase">TOTAL TAGIHAN</Text>
-              <Text className="text-lg font-black text-[#18181b]">
-                Rp {totalAmount.toLocaleString("id-ID")}
-              </Text>
+              <Text className="text-lg font-black text-[#18181b]">{formatRupiah(totalAmount)}</Text>
             </View>
           </View>
         </View>
@@ -429,7 +441,12 @@ export default function InvoiceScreen() {
                 disabled={isProcessing}
                 className="bg-[#a3e635] border-2 border-[#18181b] rounded-2xl h-14 flex-row justify-center items-center active:bg-lime-400"
               >
-                <Ionicons name="cash-outline" size={20} color="#18181b" style={{ marginRight: 8 }} />
+                <Ionicons
+                  name="cash-outline"
+                  size={20}
+                  color="#18181b"
+                  style={{ marginRight: 8 }}
+                />
                 <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
                   LUNASI & PROSES PEMBAYARAN
                 </Text>
@@ -508,13 +525,13 @@ export default function InvoiceScreen() {
                 <View className="flex-row justify-between">
                   <Text className="text-xs font-bold text-[#18181b]">Jasa Dokter & Konsul</Text>
                   <Text className="text-xs font-black text-[#18181b]">
-                    Rp {totalConsultationFee.toLocaleString("id-ID")}
+                    {formatRupiah(totalConsultationFee)}
                   </Text>
                 </View>
                 <View className="flex-row justify-between">
                   <Text className="text-xs font-bold text-[#18181b]">Total Resep Apotek</Text>
                   <Text className="text-xs font-black text-[#18181b]">
-                    Rp {totalMedicineFee.toLocaleString("id-ID")}
+                    {formatRupiah(totalMedicineFee)}
                   </Text>
                 </View>
               </View>
@@ -523,7 +540,7 @@ export default function InvoiceScreen() {
               <View className="bg-[#18181b] rounded-xl p-2.5 flex-row justify-between items-center mb-4">
                 <Text className="text-xs font-black text-white uppercase">TOTAL DIBAYAR</Text>
                 <Text className="text-sm font-black text-[#a3e635]">
-                  Rp {totalAmount.toLocaleString("id-ID")}
+                  {formatRupiah(totalAmount)}
                 </Text>
               </View>
 
@@ -571,9 +588,7 @@ export default function InvoiceScreen() {
                     color="#18181b"
                     style={{ marginRight: 3 }}
                   />
-                  <Text className="text-[11px] font-black text-[#18181b] uppercase">
-                    BAGIKAN
-                  </Text>
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase">BAGIKAN</Text>
                 </TouchableOpacity>
 
                 {/* 3. Tombol Tutup */}
@@ -582,9 +597,7 @@ export default function InvoiceScreen() {
                   onPress={() => setIsReceiptModalOpen(false)}
                   className="bg-white border-2 border-[#18181b] rounded-xl px-3 h-11 justify-center items-center active:bg-zinc-100"
                 >
-                  <Text className="text-[11px] font-black text-[#18181b] uppercase">
-                    TUTUP
-                  </Text>
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase">TUTUP</Text>
                 </TouchableOpacity>
               </View>
             </View>

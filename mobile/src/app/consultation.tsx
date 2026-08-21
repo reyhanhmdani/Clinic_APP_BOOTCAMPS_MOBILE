@@ -18,6 +18,7 @@ import { useVisitStore } from "../stores/visitStore";
 import { useMedicineStore } from "../stores/medicineStore";
 import { createConsultationService } from "../services/consulService";
 import { createInvoiceService } from "../services/invoiceService";
+import { formatRupiah } from "../utils/formatRupiah";
 
 export default function ConsultationScreen() {
   // cari kunjungan id tertentu
@@ -320,7 +321,7 @@ export default function ConsultationScreen() {
               <View className="bg-[#f4f3ed] border-2 border-[#18181b] rounded-xl px-3.5 h-11 flex-row items-center justify-between">
                 <Text className="text-xs font-bold text-[#52525b]">Tarif Dokter</Text>
                 <Text className="text-xs font-black text-[#18181b]">
-                  Rp {Number(selectedVisit?.doctor?.fee || 0).toLocaleString("id-ID")}
+                  {formatRupiah(Number(selectedVisit?.doctor?.fee || 0))}
                 </Text>
               </View>
             </View>
@@ -366,7 +367,7 @@ export default function ConsultationScreen() {
                       <View className="flex-1 mr-2">
                         <Text className="text-xs font-black text-[#18181b]">{med.name}</Text>
                         <Text className="text-[11px] font-semibold text-[#52525b] mt-0.5">
-                          Rp {med.price.toLocaleString("id-ID")} / Strip
+                          {formatRupiah(med.price)} / Strip
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -493,7 +494,7 @@ export default function ConsultationScreen() {
                           <Text
                             className={`text-xs font-black ${isSelected ? "text-[#a3e635]" : "text-emerald-700"}`}
                           >
-                            Rp {m.price.toLocaleString("id-ID")}
+                            {formatRupiah(m.price)}
                           </Text>
                         </TouchableOpacity>
                       );

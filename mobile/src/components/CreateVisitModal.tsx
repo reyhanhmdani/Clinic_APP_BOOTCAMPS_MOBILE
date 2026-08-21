@@ -14,6 +14,7 @@ import { useDoctorStore } from "../stores/doctorStore";
 import { usePatientStore } from "../stores/patientStore";
 import { useVisitStore } from "../stores/visitStore";
 import { createVisitService } from "../services/visitService";
+import { formatRupiah } from "../utils/formatRupiah";
 
 interface CreateVisitModalProps {
   visible: boolean;
@@ -197,7 +198,7 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
                               isSelected ? "text-[#a3e635]" : "text-[#18181b]"
                             }`}
                           >
-                            Rp {doctor.fee.toLocaleString("id-ID")}
+                            {formatRupiah(doctor.fee)}
                           </Text>
                         </TouchableOpacity>
                       );
