@@ -17,6 +17,7 @@ import BottomNav from "../components/BottomNav";
 import { useVisitStore } from "../stores/visitStore";
 import { useMedicineStore } from "../stores/medicineStore";
 import { createConsultationService } from "../services/consulService";
+import { createInvoiceService } from "../services/invoiceService";
 
 export default function ConsultationScreen() {
   // cari kunjungan id tertentu
@@ -39,7 +40,7 @@ export default function ConsultationScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fetchVisits = useVisitStore((state) => state.fetchVisits);
 
-  // Modal & Add Medicine Form States 
+  // Modal & Add Medicine Form States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMedId, setSelectedMedId] = useState<number | null>(null);
   const [qty, setQty] = useState("1");
@@ -52,7 +53,7 @@ export default function ConsultationScreen() {
   const handleAddMedicine = () => {
     if (!selectedMedId) {
       Alert.alert("Perhatikan", "Silahkan pilih salah satu obat dari daftar clinic");
-      return
+      return;
     }
 
     const numQty = Number(qty);
@@ -139,6 +140,7 @@ export default function ConsultationScreen() {
 
       // kirim ke server backend
       await createConsultationService(payload);
+      await createInvoiceService({ visitId: Number(visitId) });
 
       // refresh data antrean pasien di zustand store
       await fetchVisits();
