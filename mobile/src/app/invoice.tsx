@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Platform, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Platform, Alert, Modal, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import BottomNav from "../components/BottomNav";
 import { useVisitStore } from "../stores/visitStore";
 import { payInvoiceService } from "../services/invoiceService";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
 
 export default function InvoiceScreen() {
   // cari kunjungan id tertentu
@@ -14,6 +17,8 @@ export default function InvoiceScreen() {
   const fetchVisits = useVisitStore((state) => state.fetchVisits);
   const selectedVisit = visits.find((item) => item.id === Number(visitId));
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "QRIS" | "TRANSFER" | "CARD">("CASH");
 
@@ -61,6 +66,145 @@ export default function InvoiceScreen() {
       Alert.alert(`Gagal memproses pembayaran: ${error?.response?.data?.message || error.message}`);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    setIsReceiptModalOpen(true);
+  };
+
+  const getReceiptHtml = () => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+      <style>
+        body { font-family: 'Courier New', Courier, monospace; padding: 24px; color: #18181b; }
+        .header { text-align: center; border-bottom: 2px dashed #18181b; padding-bottom: 12px; margin-bottom: 12px; }
+        .clinic-name { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
+        .meta { font-size: 11px; margin-top: 4px; color: #52525b; }
+        .info-table { width: 100%; font-size: 12px; margin-bottom: 12px; }
+        .info-table td { padding: 3px 0; }
+        .divider { border-top: 1px dashed #18181b; margin: 10px 0; }
+        .items-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+        .items-table th { text-align: left; padding: 6px 0; border-bottom: 1px solid #18181b; }
+        .items-table td { padding: 6px 0; }
+        .total-section { margin-top: 12px; border-top: 2px solid #18181b; padding-top: 8px; font-size: 14px; font-weight: 900; display: flex; justify-content: space-between; }
+        .footer { text-align: center; margin-top: 24px; font-size: 11px; color: #71717a; border-top: 1px dashed #18181b; padding-top: 10px; }
+        .paid-stamp { text-align: center; margin: 15px 0; padding: 6px; border: 2px solid #18181b; font-weight: 900; font-size: 13px; background: #e4e4e7; letter-spacing: 2px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="clinic-name">REYCLINIC MEDICAL CENTER</div>
+        <div class="meta">Jl. Kesehatan No. 123 • Telp: (021) 555-0199</div>
+        <div class="meta">STRUK RESMI PEMBAYARAN KASIR & APOTEK</div>
+      </div>
+
+      <table class="info-table">
+        <tr><td><strong>No. Faktur</strong></td><td>: ${invoiceNo}</td></tr>
+        <tr><td><strong>Tanggal</strong></td><td>: ${new Date().toLocaleDateString("id-ID", { dateStyle: "long" })}</td></tr>
+        <tr><td><strong>Pasien</strong></td><td>: ${patientName} (${patientNoRm})</td></tr>
+        <tr><td><strong>Dokter</strong></td><td>: ${doctorName}</td></tr>
+        <tr><td><strong>Spesialis</strong></td><td>: ${doctorSpecialist}</td></tr>
+        <tr><td><strong>Metode Bayar</strong></td><td>: ${selectedVisit?.invoice?.paymentMethod || paymentMethod}</td></tr>
+      </table>
+
+      <div class="paid-stamp">*** LUNAS / PAID ***</div>
+
+      <div class="divider"></div>
+
+      <table class="items-table">
+        <tr>
+          <th>Rincian Layanan</th>
+          <th style="text-align: right;">Biaya</th>
+        </tr>
+        <tr>
+          <td>Jasa Konsultasi & Tindakan Dokter</td>
+          <td style="text-align: right;">Rp ${totalConsultationFee.toLocaleString("id-ID")}</td>
+        </tr>
+        <tr>
+          <td>Total Resep Farmasi Apotek</td>
+          <td style="text-align: right;">Rp ${totalMedicineFee.toLocaleString("id-ID")}</td>
+        </tr>
+      </table>
+
+      <div class="total-section">
+        <span>TOTAL DIBAYAR</span>
+        <span>Rp ${totalAmount.toLocaleString("id-ID")}</span>
+      </div>
+
+      <div class="footer">
+        <p>Terima kasih atas kunjungan Anda di ReyClinic.</p>
+        <p>Semoga lekas sembuh & sehat selalu!</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const handleSavePdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const { base64 } = await Print.printToFileAsync({ html: getReceiptHtml(), base64: true });
+      if (!base64) throw new Error("Gagal membuat PDF");
+
+      const cleanInvoiceNo = (invoiceNo || "INV").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `Struk_${cleanInvoiceNo}.pdf`;
+
+      if (Platform.OS === "android") {
+        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (permissions.granted) {
+          const uri = await FileSystem.StorageAccessFramework.createFileAsync(
+            permissions.directoryUri,
+            fileName,
+            "application/pdf"
+          );
+          await FileSystem.writeAsStringAsync(uri, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          Alert.alert("Berhasil Diunduh", `File struk berhasil disimpan ke folder pilihan Anda.`);
+          return;
+        }
+      }
+
+      const targetPdfUri = `${FileSystem.documentDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(targetPdfUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      Alert.alert("Berhasil Diunduh", "File struk berhasil disimpan di memori HP Anda.");
+    } catch (error: any) {
+      Alert.alert("Gagal Menyimpan", error?.message || "Gagal mengunduh file PDF.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleSharePdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const { base64 } = await Print.printToFileAsync({ html: getReceiptHtml(), base64: true });
+      if (!base64) throw new Error("Gagal membuat PDF");
+
+      const cleanInvoiceNo = (invoiceNo || "INV").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const targetPdfUri = `${FileSystem.documentDirectory}Struk_${cleanInvoiceNo}.pdf`;
+
+      await FileSystem.writeAsStringAsync(targetPdfUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(targetPdfUri, {
+          UTI: ".pdf",
+          mimeType: "application/pdf",
+          dialogTitle: `Bagikan Struk ${invoiceNo}`,
+        });
+      } else {
+        Alert.alert("Info", "Fitur berbagi tidak didukung di perangkat ini.");
+      }
+    } catch (error: any) {
+      Alert.alert("Gagal Membagikan", error?.message || "Tidak dapat membagikan file.");
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -241,39 +385,212 @@ export default function InvoiceScreen() {
         </View>
 
         {/* Action Button */}
-        <View className="relative mb-8">
-          <View className="absolute top-1.5 left-1.5 -right-1.5 -bottom-1.5 bg-[#18181b] rounded-2xl" />
+        <View className="mb-8">
           {isAlreadyPaid ? (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => router.replace("/queue")}
-              className="bg-[#fde047] border-2 border-[#18181b] rounded-2xl h-14 flex-row justify-center items-center active:bg-yellow-300"
-            >
-              <Ionicons
-                name="checkmark-done-circle-outline"
-                size={20}
-                color="#18181b"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
-                KEMBALI KE DAFTAR ANTREAN
-              </Text>
-            </TouchableOpacity>
+            <View className="flex-row gap-3">
+              {/* Tombol Print Ikon Saja (Kotak Minimalis Neubrutalism) */}
+              <View className="relative">
+                <View className="absolute top-1.5 left-1.5 -right-1.5 -bottom-1.5 bg-[#18181b] rounded-2xl" />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handlePrintReceipt}
+                  className="bg-white border-2 border-[#18181b] rounded-2xl w-14 h-14 justify-center items-center active:bg-zinc-100"
+                >
+                  <Ionicons name="print-outline" size={22} color="#18181b" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Tombol Utama Kembali ke Antrean */}
+              <View className="flex-1 relative">
+                <View className="absolute top-1.5 left-1.5 -right-1.5 -bottom-1.5 bg-[#18181b] rounded-2xl" />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => router.replace("/queue")}
+                  className="bg-[#fde047] border-2 border-[#18181b] rounded-2xl h-14 flex-row justify-center items-center active:bg-yellow-300"
+                >
+                  <Ionicons
+                    name="checkmark-done-circle-outline"
+                    size={20}
+                    color="#18181b"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
+                    KEMBALI KE ANTREAN
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           ) : (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handlePayInvoice}
-              disabled={isProcessing}
-              className="bg-[#a3e635] border-2 border-[#18181b] rounded-2xl h-14 flex-row justify-center items-center active:bg-lime-400"
-            >
-              <Ionicons name="cash-outline" size={20} color="#18181b" style={{ marginRight: 8 }} />
-              <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
-                LUNASI & PROSES PEMBAYARAN
-              </Text>
-            </TouchableOpacity>
+            <View className="relative">
+              <View className="absolute top-1.5 left-1.5 -right-1.5 -bottom-1.5 bg-[#18181b] rounded-2xl" />
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handlePayInvoice}
+                disabled={isProcessing}
+                className="bg-[#a3e635] border-2 border-[#18181b] rounded-2xl h-14 flex-row justify-center items-center active:bg-lime-400"
+              >
+                <Ionicons name="cash-outline" size={20} color="#18181b" style={{ marginRight: 8 }} />
+                <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
+                  LUNASI & PROSES PEMBAYARAN
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </ScrollView>
+
+      {/* E-RECEIPT MODAL (STRUK DIGITAL NEUBRUTALISM) */}
+      <Modal
+        visible={isReceiptModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsReceiptModalOpen(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-center items-center px-4 py-8">
+          <View className="relative w-full max-w-sm">
+            {/* Hard Shadow */}
+            <View className="absolute top-2 left-2 -right-2 -bottom-2 bg-[#18181b] rounded-3xl" />
+
+            {/* Receipt Container */}
+            <View className="bg-[#fefce8] border-2 border-[#18181b] rounded-3xl p-5 overflow-hidden">
+              {/* Header Struk */}
+              <View className="items-center border-b-2 border-dashed border-[#18181b] pb-3 mb-3">
+                <View className="bg-[#a3e635] border-2 border-[#18181b] px-2.5 py-0.5 rounded-full mb-1">
+                  <Text className="text-[10px] font-black text-[#18181b] uppercase tracking-wider">
+                    STRUK RESMI KASIR
+                  </Text>
+                </View>
+                <Text className="text-base font-black text-[#18181b] tracking-wider">
+                  REYCLINIC MEDICAL CENTER
+                </Text>
+                <Text className="text-[10px] font-bold text-[#71717a]">
+                  Jl. Kesehatan No. 123 • Telp: (021) 555-0199
+                </Text>
+              </View>
+
+              {/* Info Pasien & Dokter */}
+              <View className="gap-y-1 mb-3">
+                <View className="flex-row justify-between">
+                  <Text className="text-[11px] font-bold text-[#71717a]">No. Faktur:</Text>
+                  <Text className="text-[11px] font-black text-[#18181b]">{invoiceNo}</Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-[11px] font-bold text-[#71717a]">Tanggal:</Text>
+                  <Text className="text-[11px] font-bold text-[#18181b]">
+                    {new Date().toLocaleDateString("id-ID", { dateStyle: "medium" })}
+                  </Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-[11px] font-bold text-[#71717a]">Pasien:</Text>
+                  <Text className="text-[11px] font-black text-[#18181b]">{patientName}</Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-[11px] font-bold text-[#71717a]">Dokter:</Text>
+                  <Text className="text-[11px] font-black text-[#18181b]">{doctorName}</Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-[11px] font-bold text-[#71717a]">Metode Bayar:</Text>
+                  <Text className="text-[11px] font-black text-[#18181b]">
+                    {selectedVisit?.invoice?.paymentMethod || paymentMethod}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Stampel LUNAS */}
+              <View className="bg-[#a3e635] border-2 border-[#18181b] py-1 rounded-xl items-center mb-3">
+                <Text className="text-xs font-black text-[#18181b] tracking-widest uppercase">
+                  ✓ LUNAS / PAID
+                </Text>
+              </View>
+
+              {/* Rincian Biaya */}
+              <View className="border-t-2 border-dashed border-[#18181b] pt-3 mb-3 gap-y-1.5">
+                <View className="flex-row justify-between">
+                  <Text className="text-xs font-bold text-[#18181b]">Jasa Dokter & Konsul</Text>
+                  <Text className="text-xs font-black text-[#18181b]">
+                    Rp {totalConsultationFee.toLocaleString("id-ID")}
+                  </Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-xs font-bold text-[#18181b]">Total Resep Apotek</Text>
+                  <Text className="text-xs font-black text-[#18181b]">
+                    Rp {totalMedicineFee.toLocaleString("id-ID")}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Total Banner */}
+              <View className="bg-[#18181b] rounded-xl p-2.5 flex-row justify-between items-center mb-4">
+                <Text className="text-xs font-black text-white uppercase">TOTAL DIBAYAR</Text>
+                <Text className="text-sm font-black text-[#a3e635]">
+                  Rp {totalAmount.toLocaleString("id-ID")}
+                </Text>
+              </View>
+
+              {/* Footer Note */}
+              <Text className="text-[10px] font-bold text-[#71717a] text-center mb-4">
+                Terima kasih atas kunjungan Anda. Semoga lekas sembuh!
+              </Text>
+
+              {/* Tombol Aksi Modal: Simpan HP, Bagikan & Tutup */}
+              <View className="flex-row gap-2">
+                {/* 1. Tombol Simpan Langsung ke HP */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleSavePdf}
+                  disabled={isGeneratingPdf}
+                  className="flex-1 bg-[#a3e635] border-2 border-[#18181b] rounded-xl h-11 flex-row justify-center items-center active:bg-lime-400"
+                >
+                  {isGeneratingPdf ? (
+                    <ActivityIndicator size="small" color="#18181b" />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="download-outline"
+                        size={15}
+                        color="#18181b"
+                        style={{ marginRight: 3 }}
+                      />
+                      <Text className="text-[11px] font-black text-[#18181b] uppercase">
+                        SIMPAN HP
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {/* 2. Tombol Bagikan (WhatsApp / Share) */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleSharePdf}
+                  disabled={isGeneratingPdf}
+                  className="flex-1 bg-[#38bdf8] border-2 border-[#18181b] rounded-xl h-11 flex-row justify-center items-center active:bg-sky-400"
+                >
+                  <Ionicons
+                    name="share-social-outline"
+                    size={15}
+                    color="#18181b"
+                    style={{ marginRight: 3 }}
+                  />
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase">
+                    BAGIKAN
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 3. Tombol Tutup */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => setIsReceiptModalOpen(false)}
+                  className="bg-white border-2 border-[#18181b] rounded-xl px-3 h-11 justify-center items-center active:bg-zinc-100"
+                >
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase">
+                    TUTUP
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* 3. Bottom Nav */}
       <BottomNav activeTab="queue" />
