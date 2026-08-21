@@ -8,10 +8,14 @@ import { logoutService } from "../services/authService";
 import { useAuthStore } from "../stores/authStore";
 import { Visit } from "../types/clinic";
 import { useVisitStore } from "../stores/visitStore";
+import CreateVisitModal from "../components/CreateVisitModal";
 
 export default function QueueScreen() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // untuk modal create antrian
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   const { visits, loading, fetchVisits, callPatient } = useVisitStore();
 
@@ -280,10 +284,20 @@ export default function QueueScreen() {
           </ScrollView>
         </View>
 
-        {/* Queue Header Row */}
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-xs font-black text-[#18181b] tracking-wider uppercase">ANTREAN HARI INI</Text>
-          <Text className="text-xs font-bold text-[#71717a]">{filteredData.length} Pasien</Text>
+        {/* Queue Header Row with + ANTREAN Button */}
+        <View className="flex-row justify-between items-center mb-3.5">
+          <View>
+            <Text className="text-xs font-black text-[#18181b] tracking-wider uppercase">ANTREAN HARI INI</Text>
+            <Text className="text-[11px] font-bold text-[#71717a]">{filteredData.length} Pasien Terdaftar</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setIsCreateModalOpen(true)}
+            activeOpacity={0.85}
+            className="bg-[#a3e635] border-2 border-[#18181b] px-3.5 py-2 rounded-xl flex-row items-center active:bg-lime-400"
+          >
+            <Ionicons name="add-circle" size={16} color="#18181b" style={{ marginRight: 5 }} />
+            <Text className="text-xs font-black text-[#18181b] tracking-wider uppercase">+ ANTREAN</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Patient Cards List */}
@@ -352,6 +366,12 @@ export default function QueueScreen() {
           ))
         )}
       </ScrollView>
+
+      {/* Create Visit Modal */}
+      <CreateVisitModal
+        visible={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
 
       {/* Bottom Master Data Navigation Bar (Antrean, Dokter, Obat) */}
       <BottomNav activeTab="queue" />

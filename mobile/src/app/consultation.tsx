@@ -39,11 +39,12 @@ export default function ConsultationScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fetchVisits = useVisitStore((state) => state.fetchVisits);
 
-  // Modal & Add Medicine Form States (UI Layout Only)
+  // Modal & Add Medicine Form States 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMedId, setSelectedMedId] = useState<number | null>(null);
   const [qty, setQty] = useState("1");
   const [dosage, setDosage] = useState("3x1 tablet sesudah makan");
+
   // Prescribed Medicines list in current consultation
   const [prescribedMedicines, setPrescribedMedicines] = useState<any[]>([]);
 
@@ -51,6 +52,7 @@ export default function ConsultationScreen() {
   const handleAddMedicine = () => {
     if (!selectedMedId) {
       Alert.alert("Perhatikan", "Silahkan pilih salah satu obat dari daftar clinic");
+      return
     }
 
     const numQty = Number(qty);
