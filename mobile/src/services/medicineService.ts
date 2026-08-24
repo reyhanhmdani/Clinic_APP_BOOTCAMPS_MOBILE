@@ -7,17 +7,22 @@ export const getMedicineService = async (): Promise<Medicine[]> => {
   return response.data.data;
 };
 
-export const createMedicineService = async (input: Omit<Medicine, "id" | "code">): Promise<Medicine> => {
+export const createMedicineService = async (
+  input: Omit<Medicine, "id" | "code">
+): Promise<Medicine> => {
   const response = await api.post<{ data: Medicine }>("/medicines", input);
   return response.data.data;
 };
 
-export const updateMedicineService = async (medicineId: number, input: Omit<Medicine, "id" | "code">): Promise<Medicine> => {
-  const response = await api.patch<{ data: Medicine }>(`/medicines/${medicineId}`, input);
+export const updateMedicineService = async (
+  id: number,
+  input: Omit<Medicine, "id" | "code">
+): Promise<Medicine> => {
+  const response = await api.patch<{ data: Medicine }>(`/medicines/${id}`, input);
   return response.data.data;
 };
 
-export const deleteMedicineService = async (medicineId: number): Promise<Medicine> => {
-  const response = await api.delete<{ data: Medicine }>(`/medicines/${medicineId}`);
-  return response.data.data;
+export const deleteMedicineService = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(`/medicines/${id}`);
+  return response.data;
 };

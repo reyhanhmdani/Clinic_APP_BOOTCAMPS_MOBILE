@@ -13,7 +13,20 @@ export const createPatientService = async (
   return response.data.data;
 };
 
-export const getByIdPatientService = async (patientId: number): Promise<Patient> => {
-  const response = await api.get<{ data: Patient }>(`/patients/${patientId}`);
+export const getByIdPatientService = async (id: number): Promise<Patient> => {
+  const response = await api.get<{ data: Patient }>(`/patients/${id}`);
   return response.data.data;
+};
+
+export const updatePatientService = async (
+  id: number,
+  input: Partial<Omit<Patient, "id" | "noRm">>
+): Promise<Patient> => {
+  const response = await api.patch<{ data: Patient }>(`/patients/${id}`, input);
+  return response.data.data;
+};
+
+export const deletePatientService = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(`/patients/${id}`);
+  return response.data;
 };
