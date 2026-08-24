@@ -11,16 +11,19 @@ export const createInvoiceService = async (data: { visitId: number }): Promise<I
   return response.data.data;
 };
 
-export interface PayInvoiceInput {
-  paymentMethod?: PaymentMethod;
-}
-
 export const getInvoiceByIdService = async (invoiceId: number): Promise<Invoice> => {
   const response = await api.get<{ data: Invoice }>(`/invoices/${invoiceId}`);
   return response.data.data;
 };
 
-export const payInvoiceService = async (invoiceId: number, input?: PayInvoiceInput): Promise<Invoice> => {
+export interface PayInvoiceInput {
+  paymentMethod?: PaymentMethod;
+}
+
+export const payInvoiceService = async (
+  invoiceId: number,
+  input?: PayInvoiceInput
+): Promise<Invoice> => {
   const response = await api.patch<{ data: Invoice }>(`/invoices/${invoiceId}/pay`, input);
   return response.data.data;
 };

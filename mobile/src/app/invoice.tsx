@@ -90,66 +90,246 @@ export default function InvoiceScreen() {
     <!DOCTYPE html>
     <html>
     <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       <style>
-        body { font-family: 'Courier New', Courier, monospace; padding: 24px; color: #18181b; }
-        .header { text-align: center; border-bottom: 2px dashed #18181b; padding-bottom: 12px; margin-bottom: 12px; }
-        .clinic-name { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
-        .meta { font-size: 11px; margin-top: 4px; color: #52525b; }
-        .info-table { width: 100%; font-size: 12px; margin-bottom: 12px; }
-        .info-table td { padding: 3px 0; }
-        .divider { border-top: 1px dashed #18181b; margin: 10px 0; }
-        .items-table { width: 100%; font-size: 12px; border-collapse: collapse; }
-        .items-table th { text-align: left; padding: 6px 0; border-bottom: 1px solid #18181b; }
-        .items-table td { padding: 6px 0; }
-        .total-section { margin-top: 12px; border-top: 2px solid #18181b; padding-top: 8px; font-size: 14px; font-weight: 900; display: flex; justify-content: space-between; }
-        .footer { text-align: center; margin-top: 24px; font-size: 11px; color: #71717a; border-top: 1px dashed #18181b; padding-top: 10px; }
-        .paid-stamp { text-align: center; margin: 15px 0; padding: 6px; border: 2px solid #18181b; font-weight: 900; font-size: 13px; background: #e4e4e7; letter-spacing: 2px; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap');
+        
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        
+        body {
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background-color: #f4f3ed;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          padding: 24px;
+          color: #18181b;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .receipt-wrapper {
+          position: relative;
+          width: 100%;
+          max-width: 480px;
+        }
+
+        .receipt-shadow {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          width: 100%;
+          height: 100%;
+          background-color: #18181b;
+          border-radius: 24px;
+          z-index: 1;
+        }
+
+        .receipt-card {
+          position: relative;
+          background-color: #ffffff;
+          border: 3px solid #18181b;
+          border-radius: 24px;
+          padding: 24px;
+          z-index: 2;
+        }
+
+        .receipt-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
+        }
+
+        .header-left .title {
+          font-size: 15px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          color: #18181b;
+          text-transform: uppercase;
+        }
+
+        .header-left .invoice-meta {
+          font-size: 13px;
+          color: #71717a;
+          margin-top: 4px;
+          font-weight: 600;
+        }
+
+        .header-left .invoice-meta strong {
+          color: #18181b;
+          font-weight: 800;
+        }
+
+        .header-right {
+          text-align: right;
+        }
+
+        .header-right .date {
+          font-size: 13px;
+          font-weight: 800;
+          color: #18181b;
+        }
+
+        .header-right .cashier {
+          font-size: 11px;
+          font-weight: 600;
+          color: #71717a;
+          margin-top: 4px;
+        }
+
+        .patient-box {
+          background-color: #fef08a;
+          border: 2.5px solid #18181b;
+          border-radius: 16px;
+          padding: 14px 18px;
+          margin-bottom: 22px;
+        }
+
+        .patient-top-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 6px;
+        }
+
+        .patient-name {
+          font-size: 14px;
+          font-weight: 900;
+          color: #18181b;
+          text-transform: uppercase;
+        }
+
+        .patient-rm {
+          font-size: 12px;
+          font-weight: 800;
+          color: #18181b;
+        }
+
+        .doctor-row {
+          font-size: 12px;
+          font-weight: 700;
+          color: #18181b;
+        }
+
+        .services-section {
+          margin-bottom: 22px;
+        }
+
+        .services-title {
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.8px;
+          color: #18181b;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+        }
+
+        .service-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        .service-desc .service-name {
+          font-size: 13px;
+          font-weight: 800;
+          color: #18181b;
+        }
+
+        .service-desc .service-sub {
+          font-size: 11px;
+          font-weight: 600;
+          color: #71717a;
+          margin-top: 2px;
+        }
+
+        .service-price {
+          font-size: 14px;
+          font-weight: 800;
+          color: #18181b;
+        }
+
+        .total-box {
+          background-color: #a3e635;
+          border: 2.5px solid #18181b;
+          border-radius: 16px;
+          padding: 14px 18px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .total-label {
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          color: #18181b;
+          text-transform: uppercase;
+        }
+
+        .total-value {
+          font-size: 18px;
+          font-weight: 900;
+          color: #18181b;
+        }
       </style>
     </head>
     <body>
-      <div class="header">
-        <div class="clinic-name">REYCLINIC MEDICAL CENTER</div>
-        <div class="meta">Jl. Kesehatan No. 123 • Telp: (021) 555-0199</div>
-        <div class="meta">STRUK RESMI PEMBAYARAN KASIR & APOTEK</div>
-      </div>
+      <div class="receipt-wrapper">
+        <div class="receipt-shadow"></div>
+        <div class="receipt-card">
+          <div class="receipt-header">
+            <div class="header-left">
+              <div class="title">REYCLINIC RECEIPT</div>
+              <div class="invoice-meta">No. Faktur: <strong>${invoiceNo}</strong></div>
+            </div>
+            <div class="header-right">
+              <div class="date">${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</div>
+              <div class="cashier">Kasir: Admin Rey</div>
+            </div>
+          </div>
 
-      <table class="info-table">
-        <tr><td><strong>No. Faktur</strong></td><td>: ${invoiceNo}</td></tr>
-        <tr><td><strong>Tanggal</strong></td><td>: ${new Date().toLocaleDateString("id-ID", { dateStyle: "long" })}</td></tr>
-        <tr><td><strong>Pasien</strong></td><td>: ${patientName} (${patientNoRm})</td></tr>
-        <tr><td><strong>Dokter</strong></td><td>: ${doctorName}</td></tr>
-        <tr><td><strong>Spesialis</strong></td><td>: ${doctorSpecialist}</td></tr>
-        <tr><td><strong>Metode Bayar</strong></td><td>: ${selectedVisit?.invoice?.paymentMethod || paymentMethod}</td></tr>
-      </table>
+          <div class="patient-box">
+            <div class="patient-top-row">
+              <span class="patient-name">${patientName}</span>
+              <span class="patient-rm">RM: ${patientNoRm}</span>
+            </div>
+            <div class="doctor-row">
+              Dokter: ${doctorName} ${doctorSpecialist ? `(${doctorSpecialist})` : ""}
+            </div>
+          </div>
 
-      <div class="paid-stamp">*** LUNAS / PAID ***</div>
+          <div class="services-section">
+            <div class="services-title">RINCIAN BIAYA LAYANAN</div>
+            <div class="service-row">
+              <div class="service-desc">
+                <div class="service-name">Jasa Konsultasi Medis</div>
+                <div class="service-sub">Pemeriksaan & Tindakan Dokter</div>
+              </div>
+              <div class="service-price">${formatRupiah(totalConsultationFee)}</div>
+            </div>
+            <div class="service-row">
+              <div class="service-desc">
+                <div class="service-name">Total Resep Obat Apotek</div>
+                <div class="service-sub">Farmasi & Obat-obatan Pasien</div>
+              </div>
+              <div class="service-price">${formatRupiah(totalMedicineFee)}</div>
+            </div>
+          </div>
 
-      <div class="divider"></div>
-
-      <table class="items-table">
-        <tr>
-          <th>Rincian Layanan</th>
-          <th style="text-align: right;">Biaya</th>
-        </tr>
-        <tr>
-          <td>Jasa Konsultasi & Tindakan Dokter</td>
-          <td style="text-align: right;">${formatRupiah(totalConsultationFee)}</td>
-        </tr>
-        <tr>
-          <td>Total Resep Farmasi Apotek</td>
-          <td style="text-align: right;">${formatRupiah(totalMedicineFee)}</td>
-        </tr>
-      </table>
-
-      <div class="total-section">
-        <span>TOTAL DIBAYAR</span>
-        <span>${formatRupiah(totalAmount)}</span>
-      </div>
-
-      <div class="footer">
-        <p>Terima kasih atas kunjungan Anda di ReyClinic.</p>
-        <p>Semoga lekas sembuh & sehat selalu!</p>
+          <div class="total-box">
+            <span class="total-label">TOTAL TAGIHAN</span>
+            <span class="total-value">${formatRupiah(totalAmount)}</span>
+          </div>
+        </div>
       </div>
     </body>
     </html>
@@ -196,24 +376,36 @@ export default function InvoiceScreen() {
   const handleSharePdf = async () => {
     try {
       setIsGeneratingPdf(true);
-      const { base64 } = await Print.printToFileAsync({ html: getReceiptHtml(), base64: true });
-      if (!base64) throw new Error("Gagal membuat PDF");
-
-      const cleanInvoiceNo = (invoiceNo || "INV").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const targetPdfUri = `${FileSystem.documentDirectory}Struk_${cleanInvoiceNo}.pdf`;
-
-      await FileSystem.writeAsStringAsync(targetPdfUri, base64, {
-        encoding: FileSystem.EncodingType.Base64,
+      // 1. Generate PDF dengan base64
+      const { base64, uri } = await Print.printToFileAsync({
+        html: getReceiptHtml(),
+        base64: true,
       });
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(targetPdfUri, {
+      if (!uri) throw new Error("Gagal membuat PDF");
+
+      const cleanInvoiceNo = (invoiceNo || "INV").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const targetUri = `${FileSystem.cacheDirectory}Struk_${cleanInvoiceNo}.pdf`;
+
+      // 2. Tulis file langsung di cache directory agar izin file valid di Android
+      if (base64) {
+        await FileSystem.writeAsStringAsync(targetUri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      }
+
+      const fileToShare = base64 ? targetUri : uri;
+
+      // 3. Buka Native Share Dialog (WhatsApp, Telegram, dll)
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileToShare, {
           UTI: ".pdf",
           mimeType: "application/pdf",
           dialogTitle: `Bagikan Struk ${invoiceNo}`,
         });
       } else {
-        Alert.alert("Info", "Fitur berbagi tidak didukung di perangkat ini.");
+        Alert.alert("Info", "Fitur berbagi tidak didukung di perangkat/simulator ini.");
       }
     } catch (error: any) {
       Alert.alert("Gagal Membagikan", error?.message || "Tidak dapat membagikan file.");
@@ -469,85 +661,78 @@ export default function InvoiceScreen() {
             <View className="absolute top-2 left-2 -right-2 -bottom-2 bg-[#18181b] rounded-3xl" />
 
             {/* Receipt Container */}
-            <View className="bg-[#fefce8] border-2 border-[#18181b] rounded-3xl p-5 overflow-hidden">
+            <View className="bg-white border-2 border-[#18181b] rounded-3xl p-5 overflow-hidden">
               {/* Header Struk */}
-              <View className="items-center border-b-2 border-dashed border-[#18181b] pb-3 mb-3">
-                <View className="bg-[#a3e635] border-2 border-[#18181b] px-2.5 py-0.5 rounded-full mb-1">
-                  <Text className="text-[10px] font-black text-[#18181b] uppercase tracking-wider">
-                    STRUK RESMI KASIR
+              <View className="flex-row justify-between items-start mb-4">
+                <View>
+                  <Text className="text-sm font-black text-[#18181b] tracking-wider uppercase">
+                    REYCLINIC RECEIPT
+                  </Text>
+                  <Text className="text-xs font-semibold text-[#71717a] mt-0.5">
+                    No. Faktur: <Text className="font-black text-[#18181b]">{invoiceNo}</Text>
                   </Text>
                 </View>
-                <Text className="text-base font-black text-[#18181b] tracking-wider">
-                  REYCLINIC MEDICAL CENTER
-                </Text>
-                <Text className="text-[10px] font-bold text-[#71717a]">
-                  Jl. Kesehatan No. 123 • Telp: (021) 555-0199
-                </Text>
+                <View className="items-end">
+                  <Text className="text-xs font-black text-[#18181b]">Hari Ini</Text>
+                  <Text className="text-[10px] font-bold text-[#71717a] mt-0.5">Kasir: Admin Rey</Text>
+                </View>
               </View>
 
-              {/* Info Pasien & Dokter */}
-              <View className="gap-y-1 mb-3">
-                <View className="flex-row justify-between">
-                  <Text className="text-[11px] font-bold text-[#71717a]">No. Faktur:</Text>
-                  <Text className="text-[11px] font-black text-[#18181b]">{invoiceNo}</Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-[11px] font-bold text-[#71717a]">Tanggal:</Text>
-                  <Text className="text-[11px] font-bold text-[#18181b]">
-                    {new Date().toLocaleDateString("id-ID", { dateStyle: "medium" })}
+              {/* Yellow Patient & Doctor Card */}
+              <View className="bg-[#fef08a] border-2 border-[#18181b] rounded-2xl p-3.5 mb-4">
+                <View className="flex-row justify-between items-center mb-1">
+                  <Text className="text-xs font-black text-[#18181b] uppercase">
+                    {patientName}
                   </Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-[11px] font-bold text-[#71717a]">Pasien:</Text>
-                  <Text className="text-[11px] font-black text-[#18181b]">{patientName}</Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-[11px] font-bold text-[#71717a]">Dokter:</Text>
-                  <Text className="text-[11px] font-black text-[#18181b]">{doctorName}</Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-[11px] font-bold text-[#71717a]">Metode Bayar:</Text>
                   <Text className="text-[11px] font-black text-[#18181b]">
-                    {selectedVisit?.invoice?.paymentMethod || paymentMethod}
+                    RM: {patientNoRm}
                   </Text>
                 </View>
-              </View>
-
-              {/* Stampel LUNAS */}
-              <View className="bg-[#a3e635] border-2 border-[#18181b] py-1 rounded-xl items-center mb-3">
-                <Text className="text-xs font-black text-[#18181b] tracking-widest uppercase">
-                  ✓ LUNAS / PAID
+                <Text className="text-[11px] font-bold text-[#18181b]">
+                  Dokter: {doctorName} {doctorSpecialist ? `(${doctorSpecialist})` : ""}
                 </Text>
               </View>
 
-              {/* Rincian Biaya */}
-              <View className="border-t-2 border-dashed border-[#18181b] pt-3 mb-3 gap-y-1.5">
-                <View className="flex-row justify-between">
-                  <Text className="text-xs font-bold text-[#18181b]">Jasa Dokter & Konsul</Text>
+              {/* Rincian Biaya Layanan */}
+              <View className="mb-4">
+                <Text className="text-[11px] font-black text-[#18181b] tracking-wider uppercase mb-2.5">
+                  RINCIAN BIAYA LAYANAN
+                </Text>
+
+                <View className="flex-row justify-between items-center mb-2.5">
+                  <View>
+                    <Text className="text-xs font-black text-[#18181b]">Jasa Konsultasi Medis</Text>
+                    <Text className="text-[10px] font-semibold text-[#71717a]">
+                      Pemeriksaan & Tindakan Dokter
+                    </Text>
+                  </View>
                   <Text className="text-xs font-black text-[#18181b]">
                     {formatRupiah(totalConsultationFee)}
                   </Text>
                 </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-xs font-bold text-[#18181b]">Total Resep Apotek</Text>
+
+                <View className="flex-row justify-between items-center">
+                  <View>
+                    <Text className="text-xs font-black text-[#18181b]">Total Resep Obat Apotek</Text>
+                    <Text className="text-[10px] font-semibold text-[#71717a]">
+                      Farmasi & Obat-obatan Pasien
+                    </Text>
+                  </View>
                   <Text className="text-xs font-black text-[#18181b]">
                     {formatRupiah(totalMedicineFee)}
                   </Text>
                 </View>
               </View>
 
-              {/* Total Banner */}
-              <View className="bg-[#18181b] rounded-xl p-2.5 flex-row justify-between items-center mb-4">
-                <Text className="text-xs font-black text-white uppercase">TOTAL DIBAYAR</Text>
-                <Text className="text-sm font-black text-[#a3e635]">
+              {/* Lime Total Box */}
+              <View className="bg-[#a3e635] border-2 border-[#18181b] rounded-2xl p-3.5 flex-row justify-between items-center mb-4">
+                <Text className="text-xs font-black text-[#18181b] tracking-wider uppercase">
+                  TOTAL TAGIHAN
+                </Text>
+                <Text className="text-base font-black text-[#18181b]">
                   {formatRupiah(totalAmount)}
                 </Text>
               </View>
-
-              {/* Footer Note */}
-              <Text className="text-[10px] font-bold text-[#71717a] text-center mb-4">
-                Terima kasih atas kunjungan Anda. Semoga lekas sembuh!
-              </Text>
 
               {/* Tombol Aksi Modal: Simpan HP, Bagikan & Tutup */}
               <View className="flex-row gap-2">

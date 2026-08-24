@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   Modal,
@@ -9,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { getDoctorService } from "../services/doctorService";
 import { useDoctorStore } from "../stores/doctorStore";
 import { usePatientStore } from "../stores/patientStore";
 import { useVisitStore } from "../stores/visitStore";
@@ -26,24 +26,45 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
   const { patients, loading: loadingPatients, fetchPatients } = usePatientStore();
   const fetchVisits = useVisitStore((state) => state.fetchVisits);
 
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+  const [searchPatient, setSearchPatient] = useState<string>("");
+  const [showSearchPatient, setShowSearchPatient] = useState<boolean>(false);
+  const [searchDoctor, setSearchDoctor] = useState<string>("");
+  const [showSearchDoctor, setShowSearchDoctor] = useState<boolean>(false);
+
   // tarik data nya ketika modal di buka
   useEffect(() => {
     if (visible) {
       fetchDoctors();
       fetchPatients();
+      setSearchPatient("");
+      setShowSearchPatient(false);
+      setSearchDoctor("");
+      setShowSearchDoctor(false);
     }
   }, [visible]);
-
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
 
   // hanya doctor yang aktif yang ada
   const activeDoctors = doctors.filter((doc) => doc.isActive);
 
+  // Filter Data
+  const filteredPatients = patients.filter((p) => {
+    if (!searchPatient.trim()) return true;
+    const q = searchPatient.toLowerCase();
+    return p.name.toLowerCase().includes(q) || p.noRm.toLowerCase().includes(q);
+  });
+
+  const filteredDoctors = activeDoctors.filter((d) => {
+    if (!searchDoctor.trim()) return true;
+    const q = searchDoctor.toLowerCase();
+    return d.name.toLowerCase().includes(q) || d.spesialis.toLowerCase().includes(q);
+  });
+
   // form state
   const handleCreateVisit = async () => {
     if (!selectedDoctorId || !selectedPatientId) {
-      Alert.alert("Harus pilih pasien atau doctor terlebih dahulu");
+      Alert.alert("Perhatian", "Harap pilih pasien dan dokter tujuan terlebih dahulu!");
       return;
     }
     try {
@@ -57,7 +78,7 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
       setSelectedPatientId(null);
       setSelectedDoctorId(null);
       onClose();
-      Alert.alert("Sukses", "Antrian pasien berhasil di daftarkan");
+      Alert.alert("Sukses", "Antrian pasien berhasil didaftarkan");
     } catch (error: any) {
       Alert.alert("Gagal", error?.response?.data?.message || "Gagal membuat antrean");
     }
@@ -93,9 +114,54 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
             <View className="p-4 gap-y-4">
               {/* 1. Pilih Pasien */}
               <View>
-                <Text className="text-[11px] font-black text-[#18181b] uppercase tracking-wider mb-1.5">
-                  1. PILIH PASIEN *
-                </Text>
+                <View className="flex-row justify-between items-center mb-1.5">
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase tracking-wider">
+                    1. PILIH PASIEN *
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowSearchPatient(!showSearchPatient);
+                      if (showSearchPatient) setSearchPatient("");
+                    }}
+                    className={`border border-[#18181b] px-2 py-0.5 rounded flex-row items-center gap-1 ${
+                      showSearchPatient || searchPatient ? "bg-[#18181b]" : "bg-white"
+                    }`}
+                  >
+                    <Ionicons
+                      name="search"
+                      size={10}
+                      color={showSearchPatient || searchPatient ? "#ffffff" : "#18181b"}
+                    />
+                    <Text
+                      className={`text-[9px] font-black uppercase ${
+                        showSearchPatient || searchPatient ? "text-white" : "text-[#18181b]"
+                      }`}
+                    >
+                      {searchPatient ? "FILTER" : "CARI"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Input Search Pasien Muncul saat Tombol Cari Ditekan */}
+                {showSearchPatient && (
+                  <View className="bg-white border-2 border-[#18181b] rounded-lg px-2.5 py-1 flex-row items-center mb-1.5">
+                    <Ionicons name="search-outline" size={12} color="#71717a" style={{ marginRight: 4 }} />
+                    <TextInput
+                      placeholder="Ketik nama pasien / No RM..."
+                      placeholderTextColor="#a1a1aa"
+                      value={searchPatient}
+                      onChangeText={setSearchPatient}
+                      className="flex-1 text-xs font-bold text-[#18181b] p-0"
+                      autoFocus
+                    />
+                    {searchPatient.length > 0 && (
+                      <TouchableOpacity onPress={() => setSearchPatient("")}>
+                        <Ionicons name="close-circle" size={14} color="#71717a" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
                 <ScrollView
                   className="max-h-36 border-2 border-[#18181b] rounded-xl bg-white p-1.5"
                   nestedScrollEnabled
@@ -107,8 +173,14 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
                         Memuat pasien...
                       </Text>
                     </View>
+                  ) : filteredPatients.length === 0 ? (
+                    <View className="py-3 items-center justify-center">
+                      <Text className="text-[10px] font-bold text-[#71717a]">
+                        Pasien tidak ditemukan.
+                      </Text>
+                    </View>
                   ) : (
-                    patients.map((patient) => {
+                    filteredPatients.map((patient) => {
                       const isSelected = selectedPatientId === patient.id;
                       return (
                         <TouchableOpacity
@@ -134,11 +206,11 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
                                 isSelected ? "text-zinc-300" : "text-[#71717a]"
                               }`}
                             >
-                              {patient.noRm} • {patient.gender} ({patient.age} th)
+                              {patient.noRm} • {patient.gender === "MALE" ? "Laki-laki" : "Perempuan"} ({patient.age} th)
                             </Text>
                           </View>
                           {isSelected && (
-                            <Ionicons name="checkmark-circle" size={16} color="#a3e635 motion" />
+                            <Ionicons name="checkmark-circle" size={16} color="#a3e635" />
                           )}
                         </TouchableOpacity>
                       );
@@ -149,9 +221,54 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
 
               {/* 2. Pilih Dokter */}
               <View>
-                <Text className="text-[11px] font-black text-[#18181b] uppercase tracking-wider mb-1.5">
-                  2. PILIH DOKTER TUJUAN *
-                </Text>
+                <View className="flex-row justify-between items-center mb-1.5">
+                  <Text className="text-[11px] font-black text-[#18181b] uppercase tracking-wider">
+                    2. PILIH DOKTER TUJUAN *
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowSearchDoctor(!showSearchDoctor);
+                      if (showSearchDoctor) setSearchDoctor("");
+                    }}
+                    className={`border border-[#18181b] px-2 py-0.5 rounded flex-row items-center gap-1 ${
+                      showSearchDoctor || searchDoctor ? "bg-[#18181b]" : "bg-white"
+                    }`}
+                  >
+                    <Ionicons
+                      name="search"
+                      size={10}
+                      color={showSearchDoctor || searchDoctor ? "#ffffff" : "#18181b"}
+                    />
+                    <Text
+                      className={`text-[9px] font-black uppercase ${
+                        showSearchDoctor || searchDoctor ? "text-white" : "text-[#18181b]"
+                      }`}
+                    >
+                      {searchDoctor ? "FILTER" : "CARI"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Input Search Dokter Muncul saat Tombol Cari Ditekan */}
+                {showSearchDoctor && (
+                  <View className="bg-white border-2 border-[#18181b] rounded-lg px-2.5 py-1 flex-row items-center mb-1.5">
+                    <Ionicons name="search-outline" size={12} color="#71717a" style={{ marginRight: 4 }} />
+                    <TextInput
+                      placeholder="Ketik nama dokter / spesialis..."
+                      placeholderTextColor="#a1a1aa"
+                      value={searchDoctor}
+                      onChangeText={setSearchDoctor}
+                      className="flex-1 text-xs font-bold text-[#18181b] p-0"
+                      autoFocus
+                    />
+                    {searchDoctor.length > 0 && (
+                      <TouchableOpacity onPress={() => setSearchDoctor("")}>
+                        <Ionicons name="close-circle" size={14} color="#71717a" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
                 <ScrollView
                   className="max-h-36 border-2 border-[#18181b] rounded-xl bg-white p-1.5"
                   nestedScrollEnabled
@@ -163,8 +280,14 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
                         Memuat dokter...
                       </Text>
                     </View>
+                  ) : filteredDoctors.length === 0 ? (
+                    <View className="py-3 items-center justify-center">
+                      <Text className="text-[10px] font-bold text-[#71717a]">
+                        Dokter tidak ditemukan / sedang libur.
+                      </Text>
+                    </View>
                   ) : (
-                    activeDoctors.map((doctor) => {
+                    filteredDoctors.map((doctor) => {
                       const isSelected = selectedDoctorId === doctor.id;
                       return (
                         <TouchableOpacity
@@ -190,7 +313,7 @@ export default function CreateVisitModal({ visible, onClose }: CreateVisitModalP
                                 isSelected ? "text-zinc-300" : "text-[#71717a]"
                               }`}
                             >
-                              {doctor.spesialis}
+                              Poli {doctor.spesialis || "Umum"}
                             </Text>
                           </View>
                           <Text

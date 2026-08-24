@@ -92,7 +92,7 @@ model Visit {
   updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
 
   //relasi
-  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [id])
   doctor       Doctor        @relation(fields: [doctorId], references: [id])
   consultation Consultation?
   invoice      Invoice?

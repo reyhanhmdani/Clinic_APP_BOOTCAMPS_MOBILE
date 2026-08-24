@@ -1,10 +1,11 @@
-import prisma from '../config/prisma.js';
-import { ApiError } from '../utils/apiError.js';
-import { CreatePatientInput, UpdatePatientInput } from '../validation/patientSchema.js';
-import { Prisma } from '@prisma/client';
+import prisma from "../config/prisma.js";
+import { ApiError } from "../utils/apiError.js";
+import { CreatePatientInput, UpdatePatientInput } from "../validation/patientSchema.js";
+import { Prisma } from "@prisma/client";
 
 export const getAllPatientsService = async () => {
   const patients = await prisma.patient.findMany({
+    orderBy: { id: "desc" },
     select: {
       id: true,
       name: true,
@@ -30,7 +31,7 @@ export const createPatientService = async (input: CreatePatientInput) => {
     where: { noRm: { startsWith: `RM-${year}` } },
   });
 
-  const noRm = `RM-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+  const noRm = `RM-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
 
   const newPatient = await prisma.patient.create({
     data: {
@@ -54,7 +55,7 @@ export const getPatientByIdService = async (id: number) => {
   });
 
   if (!patient) {
-    throw new ApiError(404, 'patien nya ga ada ');
+    throw new ApiError(404, "patien nya ga ada ");
   }
 
   return patient;
@@ -68,7 +69,7 @@ export const updatePatientService = async (id: number, input: UpdatePatientInput
   });
 
   if (!patient) {
-    throw new ApiError(404, 'patien yang ingin di update tidak di temukan');
+    throw new ApiError(404, "patien yang ingin di update tidak di temukan");
   }
 
   const uptPatient = await prisma.patient.update({
@@ -80,26 +81,22 @@ export const updatePatientService = async (id: number, input: UpdatePatientInput
 };
 
 export const deletePatientService = async (id: number) => {
-  const getPatient = await prisma.patient.findUnique({
-    where: {
-      id: id,
-    },
+  await getPatientByIdService(id);
+
+  //  Cek apakah pasien memiliki riwayat kunjungan / rekam medis
+  const hasVisits = await prisma.visit.findFirst({
+    where: { patientId: id },
   });
-  if (!getPatient) {
-    throw new ApiError(404, 'patien yang ingin di hapus nya tidak di temukan');
+
+  if (hasVisits) {
+    throw new ApiError(
+      400,
+      "Pasien tidak dapat dihapus karena memiliki riwayat rekam medis/kunjungan"
+    );
   }
 
-  try {
-    const deletePatient = await prisma.patient.delete({
-      where: {
-        id: id,
-      },
-    });
-    return deletePatient;
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-      throw new ApiError(400, 'Pasien tidak dapat dihapus karena memiliki riwayat rekam medis/kunjungan');
-    }
-    throw error;
-  }
+  //  Eksekusi hapus jika tidak ada riwayat
+  return await prisma.patient.delete({
+    where: { id },
+  });
 };
