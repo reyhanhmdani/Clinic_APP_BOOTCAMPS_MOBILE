@@ -4,7 +4,9 @@ import { createMedicineInput, updateMedicineInput } from "../validation/medicine
 import { Prisma } from "@prisma/client";
 
 export const getAllMedicineService = async () => {
-  const medicines = await prisma.medicine.findMany();
+  const medicines = await prisma.medicine.findMany({
+    orderBy: { updatedAt: "desc" },
+  });
 
   if (medicines.length === 0) {
     throw new ApiError(404, "Medicine nya Kosong");
@@ -58,17 +60,20 @@ export const updateMedicineService = async (id: number, input: updateMedicineInp
 export const deleteMedicineService = async (id: number) => {
   await getMedicineByIdService(id);
 
-  try {
-    const deleteMedicine = await prisma.medicine.delete({
-      where: {
-        id: id,
-      },
-    });
-    return deleteMedicine;
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
-      throw new ApiError(400, "Medicine tidak dapat dihapus karna memiliki riwayat rekam medis");
-    }
-    throw error;
+  // Cek apakah obat pernah diresepkan dalam riwayat konsultasi
+  const hasConsultations = await prisma.consultationMedicine.findFirst({
+    where: { medicineId: id },
+  });
+
+  if (hasConsultations) {
+    throw new ApiError(
+      400,
+      "Obat tidak dapat dihapus karena memiliki riwayat resep / rekam medis pasien"
+    );
   }
+
+  // Eksekusi hapus jika tidak ada relasi resep
+  return await prisma.medicine.delete({
+    where: { id },
+  });
 };

@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 
 export const getAllPatientsService = async () => {
   const patients = await prisma.patient.findMany({
-    orderBy: { id: "desc" },
+    orderBy: { updatedAt: "desc" },
     select: {
       id: true,
       name: true,
@@ -14,6 +14,8 @@ export const getAllPatientsService = async () => {
       age: true,
       phone: true,
       address: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 

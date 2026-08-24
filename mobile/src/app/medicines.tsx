@@ -16,6 +16,11 @@ import BottomNav from "../components/BottomNav";
 import { useMedicineStore } from "../stores/medicineStore";
 import { Medicine } from "../types/clinic";
 import { formatRupiah } from "../utils/formatRupiah";
+import {
+  createMedicineService,
+  deleteMedicineService,
+  updateMedicineService,
+} from "../services/medicineService";
 
 export default function MedicinesScreen() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -29,7 +34,7 @@ export default function MedicinesScreen() {
   const [stock, setStock] = useState("");
   const [unit, setUnit] = useState("");
 
-  const commonUnits = ["Table", "Strip", "Botol", "Kapsul", "Tube", "Sachet"];
+  const commonUnits = ["Tablet", "Strip", "Botol", "Kapsul", "Tube", "Sachet"];
 
   const { medicines, loading, fetchMedicines } = useMedicineStore();
 
@@ -55,7 +60,7 @@ export default function MedicinesScreen() {
     setIsModalOpen(true);
   };
 
-  const handleSaveMedicine = () => {
+  const handleSaveMedicine = async () => {
     if (!name.trim()) {
       Alert.alert("Perhatian", "Nama obat wajib diisi!");
       return;
@@ -69,13 +74,47 @@ export default function MedicinesScreen() {
       return;
     }
 
-    Alert.alert(
-      "Sukses",
-      editingMedicine
-        ? `Data obat ${name} berhasil diperbarui (Mode UI)`
-        : `Obat ${name} berhasil ditambahkan (Mode UI)`,
-      [{ text: "OK", onPress: () => setIsModalOpen(false) }]
-    );
+    const payload = {
+      name: name.trim(),
+      price: Number(price),
+      stock: Number(stock),
+      unit: unit,
+    };
+
+    try {
+      if (editingMedicine) {
+        await updateMedicineService(editingMedicine.id, payload);
+        Alert.alert("Sukses", `Medicine ${name} berhasil di perbarui`);
+      } else {
+        await createMedicineService(payload);
+        Alert.alert("Sukses", `Medicine ${name} berhasil di tambahkan`);
+      }
+      setIsModalOpen(false);
+      fetchMedicines();
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Gagal menyimpan data medicine";
+      Alert.alert("error", message);
+    }
+  };
+
+  const handleDeleteMedicine = async (id: number, name: string) => {
+    Alert.alert("Konfirmasi Hapus", `Apakah kamu yakin ingin hapus medicine ${name}`, [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "hapus",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteMedicineService(id);
+            Alert.alert("Sukses", `Data medicine ${name} berhasil di hapus`);
+            await fetchMedicines();
+          } catch (error: any) {
+            const message = error.response?.data?.message || "Gagal menghapus data medicine";
+            Alert.alert("Error", message);
+          }
+        },
+      },
+    ]);
   };
 
   // Filter Data Obat
@@ -345,17 +384,7 @@ export default function MedicinesScreen() {
                     <TouchableOpacity
                       className="bg-[#f43f5e] border-2 border-[#18181b] px-3 py-1.5 rounded-lg flex-row items-center active:bg-rose-600"
                       activeOpacity={0.8}
-                      onPress={() =>
-                        Alert.alert("Konfirmasi Hapus", `Hapus obat ${medicine.name}?`, [
-                          { text: "Batal", style: "cancel" },
-                          {
-                            text: "Hapus",
-                            style: "destructive",
-                            onPress: () =>
-                              Alert.alert("Informasi", "Obat berhasil dihapus (Mode UI)"),
-                          },
-                        ])
-                      }
+                      onPress={() => handleDeleteMedicine(medicine.id, medicine.name)}
                     >
                       <Ionicons
                         name="trash-outline"
