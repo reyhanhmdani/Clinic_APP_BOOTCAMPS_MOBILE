@@ -102,3 +102,54 @@ export const deletePatientService = async (id: number) => {
     where: { id },
   });
 };
+
+export const getPatientHistoryService = async (id: number) => {
+  const patient = await getPatientByIdService(id);
+
+  // Ambil semua riwayat kunjungan pasien dari yang terbaru
+  const visits = await prisma.visit.findMany({
+    where: { patientId: id },
+    orderBy: { visitDate: "desc" },
+    include: {
+      doctor: {
+        select: {
+          id: true,
+          name: true,
+          spesialis: true,
+        },
+      },
+      consultation: {
+        include: {
+          consultationMedicines: {
+            include: {
+              medicine: {
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  unit: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      invoice: {
+        select: {
+          id: true,
+          invoiceNo: true,
+          totalAmount: true,
+          status: true,
+          paymentMethod: true,
+          paidAt: true,
+        },
+      },
+    },
+  });
+
+  return {
+    patient,
+    totalVisits: visits.length,
+    visits,
+  };
+}; 

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import BottomNav from "../components/BottomNav";
+import PatientHistoryModal from "../components/PatientHistoryModal";
 import { usePatientStore } from "../stores/patientStore";
 import { Patient } from "../types/clinic";
 import {
@@ -26,6 +27,10 @@ export default function PatientsScreen() {
   const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+
+  // History Modal State
+  const [selectedPatientForHistory, setSelectedPatientForHistory] = useState<Patient | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
 
   // Form State
   const [name, setName] = useState("");
@@ -58,6 +63,11 @@ export default function PatientsScreen() {
     setPhone(patient.phone || "");
     setAddress(patient.address || "");
     setIsModalOpen(true);
+  };
+
+  const openHistoryModal = (patient: Patient) => {
+    setSelectedPatientForHistory(patient);
+    setIsHistoryModalOpen(true);
   };
 
   const handleSavePatient = async () => {
@@ -379,34 +389,51 @@ export default function PatientsScreen() {
                 </View>
 
                 {/* Actions Row */}
-                <View className="flex-row items-center justify-end gap-2 pt-2 border-t border-zinc-200">
+                <View className="flex-row items-center justify-between pt-2 border-t border-zinc-200">
+                  {/* Tombol Rekam Medis */}
                   <TouchableOpacity
-                    className="bg-white border-2 border-[#18181b] px-3 py-1.5 rounded-lg flex-row items-center active:bg-zinc-100"
+                    className="bg-[#bae6fd] border-2 border-[#18181b] px-2.5 py-1.5 rounded-lg flex-row items-center active:bg-sky-300"
                     activeOpacity={0.8}
-                    onPress={() => openEditModal(patient)}
+                    onPress={() => openHistoryModal(patient)}
                   >
                     <Ionicons
-                      name="create-outline"
+                      name="document-text-outline"
                       size={14}
                       color="#18181b"
                       style={{ marginRight: 4 }}
                     />
-                    <Text className="text-xs font-black text-[#18181b]">EDIT</Text>
+                    <Text className="text-xs font-black text-[#18181b]">REKAM MEDIS</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    className="bg-[#f43f5e] border-2 border-[#18181b] px-3 py-1.5 rounded-lg flex-row items-center active:bg-rose-600"
-                    activeOpacity={0.8}
-                    onPress={() => handleDeletePatient(patient.id, patient.name)}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={14}
-                      color="#ffffff"
-                      style={{ marginRight: 4 }}
-                    />
-                    <Text className="text-xs font-black text-white">HAPUS</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row items-center gap-2">
+                    <TouchableOpacity
+                      className="bg-white border-2 border-[#18181b] px-3 py-1.5 rounded-lg flex-row items-center active:bg-zinc-100"
+                      activeOpacity={0.8}
+                      onPress={() => openEditModal(patient)}
+                    >
+                      <Ionicons
+                        name="create-outline"
+                        size={14}
+                        color="#18181b"
+                        style={{ marginRight: 4 }}
+                      />
+                      <Text className="text-xs font-black text-[#18181b]">EDIT</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="bg-[#f43f5e] border-2 border-[#18181b] px-3 py-1.5 rounded-lg flex-row items-center active:bg-rose-600"
+                      activeOpacity={0.8}
+                      onPress={() => handleDeletePatient(patient.id, patient.name)}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={14}
+                        color="#ffffff"
+                        style={{ marginRight: 4 }}
+                      />
+                      <Text className="text-xs font-black text-white">HAPUS</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </View>
@@ -551,6 +578,13 @@ export default function PatientsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal Riwayat Rekam Medis Pasien */}
+      <PatientHistoryModal
+        visible={isHistoryModalOpen}
+        patient={selectedPatientForHistory}
+        onClose={() => setIsHistoryModalOpen(false)}
+      />
 
       {/* Persistent BottomNav with 'patients' active tab */}
       <BottomNav activeTab="patients" />
