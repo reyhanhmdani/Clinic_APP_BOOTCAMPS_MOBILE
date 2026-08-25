@@ -54,10 +54,20 @@ export default function MedicinesScreen() {
   const openEditModal = (med: Medicine) => {
     setEditingMedicine(med);
     setName(med.name);
-    setPrice(String(med.price));
+    setPrice(new Intl.NumberFormat("id-ID").format(Number(med.price)));
     setStock(String(med.stock));
     setUnit(med.unit);
     setIsModalOpen(true);
+  };
+
+  const handlePriceChange = (text: string) => {
+    const cleanNumber = text.replace(/\D/g, "");
+    if (!cleanNumber) {
+      setPrice("");
+      return;
+    }
+    const formatted = new Intl.NumberFormat("id-ID").format(Number(cleanNumber));
+    setPrice(formatted);
   };
 
   const handleSaveMedicine = async () => {
@@ -65,8 +75,10 @@ export default function MedicinesScreen() {
       Alert.alert("Perhatian", "Nama obat wajib diisi!");
       return;
     }
-    if (!price.trim() || isNaN(Number(price))) {
-      Alert.alert("Perhatian", "Harga obat harus berupa angka valid!");
+
+    const cleanPrice = Number(price.replace(/\D/g, ""));
+    if (!price.trim() || isNaN(cleanPrice) || cleanPrice <= 0) {
+      Alert.alert("Perhatian", "Harga obat harus berupa nominal angka valid!");
       return;
     }
     if (!stock.trim() || isNaN(Number(stock))) {
@@ -76,7 +88,7 @@ export default function MedicinesScreen() {
 
     const payload = {
       name: name.trim(),
-      price: Number(price),
+      price: cleanPrice,
       stock: Number(stock),
       unit: unit,
     };
@@ -450,14 +462,17 @@ export default function MedicinesScreen() {
                   <Text className="text-xs font-black text-[#18181b] uppercase mb-1.5">
                     Harga Jual (Rp) *
                   </Text>
-                  <TextInput
-                    value={price}
-                    onChangeText={setPrice}
-                    keyboardType="numeric"
-                    placeholder="15000"
-                    placeholderTextColor="#a1a1aa"
-                    className="bg-[#f4f3ed] border-2 border-[#18181b] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#18181b]"
-                  />
+                  <View className="flex-row items-center bg-[#f4f3ed] border-2 border-[#18181b] rounded-xl px-3 py-2.5">
+                    <Text className="text-xs font-black text-[#71717a] mr-1">Rp</Text>
+                    <TextInput
+                      value={price}
+                      onChangeText={handlePriceChange}
+                      keyboardType="numeric"
+                      placeholder="15.000"
+                      placeholderTextColor="#a1a1aa"
+                      className="flex-1 text-xs font-bold text-[#18181b] p-0"
+                    />
+                  </View>
                 </View>
 
                 <View className="flex-1">

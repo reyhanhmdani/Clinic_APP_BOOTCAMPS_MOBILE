@@ -1,5 +1,5 @@
 import api from "../api/api";
-import type { Patient } from "../types/clinic";
+import type { Patient, Visit } from "../types/clinic";
 
 export const getPatientService = async (): Promise<Patient[]> => {
   const response = await api.get<{ data: Patient[] }>("/patients");
@@ -29,4 +29,19 @@ export const updatePatientService = async (
 export const deletePatientService = async (id: number): Promise<{ message: string }> => {
   const response = await api.delete<{ message: string }>(`/patients/${id}`);
   return response.data;
+};
+
+export interface PatientHistoryResponse {
+  patient: Patient;
+  totalVisits: number;
+  visits: Visit[];
+}
+
+export const getPatientHistoryService = async (
+  id: number
+): Promise<PatientHistoryResponse> => {
+  const response = await api.get<{ data: PatientHistoryResponse }>(
+    `/patients/${id}/history`
+  );
+  return response.data.data;
 };

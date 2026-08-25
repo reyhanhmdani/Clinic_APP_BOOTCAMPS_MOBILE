@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 import {
   createPatientService,
   deletePatientService,
   getAllPatientsService,
   getPatientByIdService,
+  getPatientHistoryService,
   updatePatientService,
-} from '../services/patientService.js';
+} from "../services/patientService.js";
 
 export const getAllPatientsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -69,6 +70,24 @@ export const deletePatientController = async (req: Request, res: Response, next:
 
     return res.status(200).json({
       message: `Berhasil menghapus pasien dengan id ${deletePatient.id}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPatientHistoryController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { idPatient } = req.params;
+    const history = await getPatientHistoryService(Number(idPatient));
+
+    return res.status(200).json({
+      message: `Berhasil mengambil riwayat rekam medis pasien`,
+      data: history,
     });
   } catch (error) {
     next(error);
