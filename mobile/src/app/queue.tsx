@@ -19,6 +19,8 @@ import { useAuthStore } from "../stores/authStore";
 import { Visit } from "../types/clinic";
 import { useVisitStore } from "../stores/visitStore";
 import CreateVisitModal from "../components/CreateVisitModal";
+import { useInvoiceStore } from "../stores/invoiceStore";
+import { formatRupiah } from "../utils/formatRupiah";
 
 export default function QueueScreen() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
@@ -27,14 +29,37 @@ export default function QueueScreen() {
   // untuk modal create antrian
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
-  const { visits, loading, fetchVisits, callPatient } = useVisitStore();
+  const [period, setPeriod] = useState<"TODAY" | "WEEK" | "MONTH" | "ALL">("TODAY");
 
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { visits, loading, fetchVisits, callPatient } = useVisitStore();
+  const { invoices, fetchInvoices } = useInvoiceStore();
+
   const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
     fetchVisits();
+    fetchInvoices();
   }, []);
+
+  const totalRevenue = invoices
+    .filter((inv) => {
+      if (inv.status !== "PAID") return false;
+      if (period === "ALL") return true;
+
+      // memastikan tanggal nya sebelum di convert
+      const rawDate = inv.paidAt || inv.createdAt;
+      if (!rawDate) return false;
+
+      const date = new Date(rawDate);
+      const now = new Date();
+
+      if (period === "TODAY") return date.toDateString() === now.toDateString();
+      if (period === "WEEK") return date >= new Date(now.getTime() - 7 * 86400000);
+      if (period === "MONTH")
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      return true;
+    })
+    .reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
 
   const handleLogoutPress = async () => {
     try {
@@ -206,12 +231,68 @@ export default function QueueScreen() {
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={fetchVisits}
+            onRefresh={() => {
+              fetchVisits();
+              fetchInvoices();
+            }}
             colors={["#18181b"]}
             tintColor="#18181b"
           />
         }
       >
+        {/* Banner Total Pendapatan Kasir Terbayar (PAID) */}
+        <View className="relative mb-4">
+          <View className="absolute top-1 left-1 -right-1 -bottom-1 bg-[#18181b] rounded-2xl" />
+          <View className="bg-[#a3e635] border-2 border-[#18181b] rounded-2xl p-4">
+            {/* Top Row: Label, Amount, and Wallet Icon */}
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-1 mr-2">
+                <View className="bg-[#18181b] px-2 py-0.5 self-start rounded mb-1">
+                  <Text className="text-[9px] font-black text-[#a3e635] uppercase tracking-wider">
+                    PENDAPATAN • {period === "TODAY" ? "HARI INI" : period === "WEEK" ? "7 HARI TERAKHIR" : period === "MONTH" ? "BULAN INI" : "SEMUA WAKTU"}
+                  </Text>
+                </View>
+                <Text className="text-2xl font-black text-[#18181b]">
+                  {formatRupiah(totalRevenue)}
+                </Text>
+              </View>
+              <View className="w-11 h-11 bg-white border-2 border-[#18181b] rounded-xl items-center justify-center">
+                <Ionicons name="wallet" size={22} color="#18181b" />
+              </View>
+            </View>
+
+            {/* Bottom Row: 4 Period Filter Pills */}
+            <View className="flex-row gap-1.5 pt-2.5 border-t border-[#18181b]/20">
+              {[
+                { id: "TODAY", label: "Hari Ini" },
+                { id: "WEEK", label: "7 Hari" },
+                { id: "MONTH", label: "Bulan Ini" },
+                { id: "ALL", label: "Semua" },
+              ].map((p) => {
+                const isActive = period === p.id;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    activeOpacity={0.8}
+                    onPress={() => setPeriod(p.id as any)}
+                    className={`flex-1 py-1 rounded-lg border-2 border-[#18181b] items-center justify-center ${
+                      isActive ? "bg-[#18181b]" : "bg-white"
+                    }`}
+                  >
+                    <Text
+                      className={`text-[9px] font-black uppercase ${
+                        isActive ? "text-white" : "text-[#18181b]"
+                      }`}
+                    >
+                      {p.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
         {/* Quick Operational Stats Cards (2 Columns Balanced Grid) */}
         <View className="gap-y-3 mb-5">
           {/* Row 1 */}
